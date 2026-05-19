@@ -1,553 +1,562 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
-      <link rel="icon" type="image/png" href="https://drive.google.com/thumbnail?id=1mN39uinRmOQGj04B5OfC9ZTPtlXyF1mb&sz=256">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تقويم حجوزات سيارات الإسعاف</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-
-<style>
-* {
-    box-sizing: border-box;
-}
-
-:root {
-    --primary: #0f766e;
-    --primary-light: #14b8a6;
-    --primary-soft: #ccfbf1;
-    --danger: #ef4444;
-    --danger-soft: #fee2e2;
-    --text: #172033;
-    --muted: #64748b;
-    --card: #ffffff;
-    --border: #e2e8f0;
-    --bg: #f8fafc;
-    --shadow: 0 18px 45px rgba(15, 23, 42, .10);
-}
-
-body {
-    margin: 0;
-    font-family: 'Cairo', sans-serif;
-    background:
-        radial-gradient(circle at top right, rgba(20,184,166,.18), transparent 32%),
-        linear-gradient(180deg, #f8fafc 0%, #eef6f5 100%);
-    color: var(--text);
-    min-height: 100vh;
-}
-
-header {
-    background:
-        linear-gradient(135deg, rgba(15,118,110,.98), rgba(20,184,166,.92)),
-        radial-gradient(circle at left, rgba(255,255,255,.22), transparent 28%);
-    color: white;
-    padding: 30px 20px;
-    text-align: center;
-    box-shadow: 0 12px 30px rgba(15, 118, 110, .22);
-    border-bottom-left-radius: 32px;
-    border-bottom-right-radius: 32px;
-}
-
-.logo {
-    width: 96px;
-    height: 96px;
-    object-fit: cover;
-    border-radius: 50%;
-    display: block;
-    margin: 0 auto 14px;
-    background: white;
-    padding: 5px;
-    box-shadow: 0 12px 26px rgba(15, 23, 42, .20);
-}
-
-header h1 {
-    margin: 0;
-    font-size: clamp(24px, 4vw, 36px);
-    font-weight: 800;
-    letter-spacing: -.5px;
-}
-
-header p {
-    margin: 8px 0 0;
-    opacity: .9;
-    font-size: 15px;
-}
-
-.container {
-    max-width: 1200px;
-    margin: auto;
-    padding: 26px 20px 40px;
-}
-
-.topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 22px;
-    gap: 14px;
-    flex-wrap: wrap;
-    background: rgba(255,255,255,.78);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(226,232,240,.85);
-    border-radius: 22px;
-    padding: 14px;
-    box-shadow: var(--shadow);
-}
-
-.month-nav {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-#monthTitle {
-    margin: 0;
-    min-width: 190px;
-    text-align: center;
-    font-size: 22px;
-    color: var(--primary);
-    font-weight: 800;
-}
-
-button {
-    border: none;
-    border-radius: 14px;
-    padding: 11px 18px;
-    font-family: inherit;
-    cursor: pointer;
-    transition: .2s ease;
-    font-weight: 700;
-}
-
-.nav-btn {
-    background: #fff;
-    color: var(--text);
-    border: 1px solid var(--border);
-    box-shadow: 0 6px 16px rgba(15,23,42,.06);
-}
-
-.nav-btn:hover {
-    background: var(--primary-soft);
-    color: var(--primary);
-    transform: translateY(-1px);
-}
-
-.book-btn {
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
-    color: white;
-    box-shadow: 0 12px 24px rgba(15, 118, 110, .24);
-}
-
-.book-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 16px 28px rgba(15, 118, 110, .28);
-}
-
-.calendar {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 12px;
-}
-
-.day-name {
-    background: linear-gradient(135deg, var(--primary), #0d9488);
-    color: white;
-    padding: 13px;
-    text-align: center;
-    border-radius: 16px;
-    font-weight: 800;
-    box-shadow: 0 10px 20px rgba(15,118,110,.16);
-}
-
-.day {
-    background: rgba(255,255,255,.92);
-    min-height: 120px;
-    border-radius: 20px;
-    padding: 12px;
-    box-shadow: 0 10px 26px rgba(15,23,42,.07);
-    border: 1px solid rgba(226,232,240,.95);
-    position: relative;
-    cursor: pointer;
-    transition: .22s ease;
-    overflow: hidden;
-}
-
-.day::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(20,184,166,.10), transparent 58%);
-    opacity: 0;
-    transition: .2s;
-}
-
-.day:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 16px 34px rgba(15,23,42,.12);
-    border-color: rgba(20,184,166,.45);
-}
-
-.day:hover::before {
-    opacity: 1;
-}
-
-.day.empty {
-    background: transparent;
-    box-shadow: none;
-    border: none;
-    cursor: default;
-}
-
-.day.empty:hover {
-    transform: none;
-}
-
-.day-number {
-    position: relative;
-    z-index: 1;
-    font-weight: 800;
-    font-size: 18px;
-    margin-bottom: 10px;
-}
-
-.day-status {
-    position: relative;
-    z-index: 1;
-    color: var(--muted);
-    font-size: 13px;
-}
-
-.busy {
-    background: linear-gradient(180deg, #fff 0%, #fff7f7 100%);
-    border: 1px solid rgba(239, 68, 68, .35);
-}
-
-.busy .day-number {
-    color: var(--danger);
-}
-
-.badge {
-    position: absolute;
-    bottom: 12px;
-    left: 12px;
-    background: linear-gradient(135deg, var(--danger), #f97316);
-    color: white;
-    border-radius: 999px;
-    padding: 5px 12px;
-    font-size: 12px;
-    font-weight: 800;
-    box-shadow: 0 10px 18px rgba(239,68,68,.22);
-    z-index: 1;
-}
-
-.modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(15,23,42,.58);
-    backdrop-filter: blur(6px);
-    justify-content: center;
-    align-items: center;
-    z-index: 999;
-    padding: 18px;
-}
-
-.modal-content {
-    background: white;
-    padding: 26px;
-    border-radius: 26px;
-    width: 100%;
-    max-width: 460px;
-    text-align: center;
-    box-shadow: 0 30px 70px rgba(15,23,42,.25);
-    border: 1px solid rgba(226,232,240,.9);
-    animation: pop .18s ease-out;
-}
-
-@keyframes pop {
-    from {
-        transform: translateY(12px) scale(.97);
-        opacity: 0;
+<head><link rel="icon" type="image/png" href="https://drive.google.com/thumbnail?id=1mN39uinRmOQGj04B5OfC9ZTPtlXyF1mb&sz=256"><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>تقويم حجوزات سيارات الإسعاف - جمعية الجواهر بقمار</title><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet"><style>* {
+        box-sizing: border-box;
     }
-    to {
-        transform: translateY(0) scale(1);
-        opacity: 1;
+
+    :root {
+        --primary: #2986B0;
+        --primary-light: #7ED6D1;
+        --primary-soft: #E6F8F7;
+        --accent: #F59E0B;
+        --gold-brown: #A86417;
+        --ink: #222222;
+        --danger: #ef4444;
+        --danger-soft: #fee2e2;
+        --text: #172033;
+        --muted: #596575;
+        --card: #ffffff;
+        --border: #e2e8f0;
+        --bg: #f8fafc;
+        --shadow: 0 18px 45px rgba(15, 23, 42, .10);
     }
-}
 
-.modal-content h2 {
-    margin: 0 0 10px;
-    color: var(--primary);
-    font-size: 24px;
-    font-weight: 800;
-}
+    body {
+        margin: 0;
+        font-family: 'Cairo', sans-serif;
+        background:
+            radial-gradient(circle at top right, rgba(20,184,166,.18), transparent 32%),
+            linear-gradient(180deg, #f8fafc 0%, #eef6f5 100%);
+        color: var(--text);
+        min-height: 100vh;
+    }
 
-.modal-content p {
-    margin: 0 0 14px;
-    color: var(--muted);
-    line-height: 1.8;
-}
-
-.modal-content a {
-    display: inline-block;
-    margin-top: 10px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
-    color: white;
-    text-decoration: none;
-    padding: 12px 22px;
-    border-radius: 14px;
-    font-weight: 800;
-    box-shadow: 0 12px 24px rgba(15,118,110,.20);
-}
-
-.close {
-    margin-top: 14px;
-    background: #f1f5f9;
-    color: var(--text);
-}
-
-.close:hover {
-    background: #e2e8f0;
-}
-
-.booking-item {
-    padding: 14px;
-    border-radius: 16px;
-    background: #f8fafc;
-    margin-bottom: 12px;
-    border-right: 5px solid var(--primary);
-    text-align: right;
-    box-shadow: inset 0 0 0 1px rgba(226,232,240,.8);
-}
-
-.booking-item strong {
-    color: var(--primary);
-}
-
-.no-booking {
-    background: #f0fdfa;
-    color: var(--primary);
-    padding: 14px;
-    border-radius: 16px;
-    font-weight: 700;
-}
-
-@media(max-width:768px) {
     header {
-        padding: 24px 14px;
-        border-bottom-left-radius: 24px;
-        border-bottom-right-radius: 24px;
+        background:
+            linear-gradient(135deg, rgba(15,118,110,.98), rgba(20,184,166,.92)),
+            radial-gradient(circle at left, rgba(255,255,255,.22), transparent 28%);
+        color: white;
+        padding: 30px 20px;
+        text-align: center;
+        box-shadow: 0 12px 30px rgba(15, 118, 110, .22);
+        border-bottom-left-radius: 32px;
+        border-bottom-right-radius: 32px;
     }
 
     .logo {
-        width: 78px;
-        height: 78px;
+        width: 96px;
+        height: 96px;
+        object-fit: cover;
+        border-radius: 50%;
+        display: block;
+        margin: 0 auto 14px;
+        background: white;
+        padding: 5px;
+        box-shadow: 0 12px 26px rgba(15, 23, 42, .20);
     }
 
     header h1 {
-        font-size: 23px;
-        line-height: 1.45;
+        margin: 0;
+        font-size: clamp(24px, 4vw, 36px);
+        font-weight: 800;
+        letter-spacing: -.5px;
     }
 
     header p {
-        font-size: 13px;
+        margin: 8px 0 0;
+        opacity: .9;
+        font-size: 15px;
     }
 
     .container {
-        padding: 18px 8px 28px;
+        max-width: 1200px;
+        margin: auto;
+        padding: 26px 20px 40px;
     }
 
     .topbar {
-        justify-content: center;
-        padding: 12px;
-        border-radius: 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 22px;
+        gap: 14px;
+        flex-wrap: wrap;
+        background: rgba(255,255,255,.78);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(226,232,240,.85);
+        border-radius: 22px;
+        padding: 14px;
+        box-shadow: var(--shadow);
     }
 
     .month-nav {
-        width: 100%;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
     }
 
     #monthTitle {
-        width: 100%;
-        min-width: 0;
-        grid-column: 1 / -1;
-        order: -1;
-        font-size: 20px;
+        margin: 0;
+        min-width: 190px;
+        text-align: center;
+        font-size: 22px;
+        color: var(--primary);
+        font-weight: 800;
     }
 
-    .nav-btn,
+    button {
+        border: none;
+        border-radius: 14px;
+        padding: 11px 18px;
+        font-family: inherit;
+        cursor: pointer;
+        transition: .2s ease;
+        font-weight: 700;
+    }
+
+    .nav-btn {
+        background: #fff;
+        color: var(--text);
+        border: 1px solid var(--border);
+        box-shadow: 0 6px 16px rgba(15,23,42,.06);
+    }
+
+    .nav-btn:hover {
+        background: var(--primary-soft);
+        color: var(--primary);
+        transform: translateY(-1px);
+    }
+
     .book-btn {
-        width: 100%;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        color: white;
+        box-shadow: 0 12px 24px rgba(15, 118, 110, .24);
+    }
+
+    .book-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 16px 28px rgba(15, 118, 110, .28);
     }
 
     .calendar {
-        grid-template-columns: repeat(7, minmax(0, 1fr));
-        gap: 4px;
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 12px;
     }
 
     .day-name {
-        display: block;
-        padding: 7px 2px;
-        border-radius: 8px;
-        font-size: 10px;
-        box-shadow: none;
+        background: linear-gradient(135deg, var(--primary), #7ED6D1);
+        color: white;
+        padding: 13px;
+        text-align: center;
+        border-radius: 16px;
+        font-weight: 800;
+        box-shadow: 0 10px 20px rgba(15,118,110,.16);
     }
 
     .day {
-        min-height: 58px;
-        border-radius: 10px;
-        padding: 5px;
-        box-shadow: 0 5px 14px rgba(15,23,42,.06);
+        background: rgba(255,255,255,.92);
+        min-height: 120px;
+        border-radius: 20px;
+        padding: 12px;
+        box-shadow: 0 10px 26px rgba(15,23,42,.07);
+        border: 1px solid rgba(226,232,240,.95);
+        position: relative;
+        cursor: pointer;
+        transition: .22s ease;
+        overflow: hidden;
+    }
+
+    .day::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(20,184,166,.10), transparent 58%);
+        opacity: 0;
+        transition: .2s;
     }
 
     .day:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 34px rgba(15,23,42,.12);
+        border-color: rgba(20,184,166,.45);
+    }
+
+    .day:hover::before {
+        opacity: 1;
+    }
+
+    .day.empty {
+        background: transparent;
+        box-shadow: none;
+        border: none;
+        cursor: default;
+    }
+
+    .day.empty:hover {
         transform: none;
     }
 
     .day-number {
-        font-size: 13px;
-        margin-bottom: 2px;
+        position: relative;
+        z-index: 1;
+        font-weight: 800;
+        font-size: 18px;
+        margin-bottom: 10px;
     }
 
     .day-status {
-        display: none;
+        position: relative;
+        z-index: 1;
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    .busy {
+        background: linear-gradient(180deg, #fff 0%, #fff7f7 100%);
+        border: 1px solid rgba(239, 68, 68, .35);
+    }
+
+    .busy .day-number {
+        color: var(--danger);
     }
 
     .badge {
-        left: 4px;
-        bottom: 4px;
-        font-size: 9px;
-        padding: 2px 5px;
+        position: absolute;
+        bottom: 12px;
+        left: 12px;
+        background: linear-gradient(135deg, var(--danger), #f97316);
+        color: white;
+        border-radius: 999px;
+        padding: 5px 12px;
+        font-size: 12px;
+        font-weight: 800;
+        box-shadow: 0 10px 18px rgba(239,68,68,.22);
+        z-index: 1;
     }
 
     .modal {
-        align-items: flex-end;
-        padding: 10px;
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15,23,42,.58);
+        backdrop-filter: blur(6px);
+        justify-content: center;
+        align-items: center;
+        z-index: 999;
+        padding: 18px;
     }
 
     .modal-content {
-        max-width: none;
-        border-radius: 24px 24px 18px 18px;
-        padding: 22px 18px;
+        background: white;
+        padding: 26px;
+        border-radius: 26px;
+        width: 100%;
+        max-width: 500px;
+        text-align: center;
+        box-shadow: 0 30px 70px rgba(15,23,42,.25);
+        border: 1px solid rgba(226,232,240,.9);
+        animation: pop .18s ease-out;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    @keyframes pop {
+        from {
+            transform: translateY(12px) scale(.97);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
     }
 
     .modal-content h2 {
-        font-size: 21px;
-    }
-}
-
-@media(max-width:420px) {
-    .container {
-        padding-left: 5px;
-        padding-right: 5px;
+        margin: 0 0 10px;
+        color: var(--primary);
+        font-size: 24px;
+        font-weight: 800;
     }
 
-    .calendar {
-        gap: 3px;
+    .modal-content p {
+        margin: 0 0 14px;
+        color: var(--muted);
+        line-height: 1.8;
     }
 
-    .day-name {
-        font-size: 9px;
-        padding: 6px 1px;
+    .modal-content a {
+        display: inline-block;
+        margin-top: 10px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        color: white;
+        text-decoration: none;
+        padding: 12px 22px;
+        border-radius: 14px;
+        font-weight: 800;
+        box-shadow: 0 12px 24px rgba(15,118,110,.20);
     }
 
-    .day {
-        min-height: 52px;
-        border-radius: 8px;
-        padding: 4px;
+    .close {
+        margin-top: 14px;
+        background: #f1f5f9;
+        color: var(--text);
     }
 
-    .day-number {
-        font-size: 12px;
+    .close:hover {
+        background: #e2e8f0;
     }
 
-    .badge {
-        font-size: 8px;
-        padding: 1px 4px;
+    .booking-item {
+        padding: 14px;
+        border-radius: 16px;
+        background: #f8fafc;
+        margin-bottom: 12px;
+        border-right: 5px solid var(--accent);
+        text-align: right;
+        box-shadow: inset 0 0 0 1px rgba(226,232,240,.8);
     }
-}
-</style>
+
+    .booking-item.burial {
+        border-right-color: #6b7280;
+        background: #f3f4f6;
+    }
+
+    .booking-item strong {
+        color: var(--primary);
+    }
+
+    .booking-item.burial strong {
+        color: #6b7280;
+    }
+
+    .service-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 800;
+        margin-right: 8px;
+    }
+
+    .service-badge.medical {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .service-badge.burial {
+        background: #f3e8ff;
+        color: #6b21a5;
+    }
+
+    .no-booking {
+        background: #F5F5F5;
+        color: var(--primary);
+        padding: 14px;
+        border-radius: 16px;
+        font-weight: 700;
+    }
+
+    @media(max-width:768px) {
+        header {
+            padding: 24px 14px;
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 24px;
+        }
+
+        .logo {
+            width: 78px;
+            height: 78px;
+        }
+
+        header h1 {
+            font-size: 23px;
+            line-height: 1.45;
+        }
+
+        header p {
+            font-size: 13px;
+        }
+
+        .container {
+            padding: 18px 8px 28px;
+        }
+
+        .topbar {
+            justify-content: center;
+            padding: 12px;
+            border-radius: 18px;
+        }
+
+        .month-nav {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        #monthTitle {
+            width: 100%;
+            min-width: 0;
+            grid-column: 1 / -1;
+            order: -1;
+            font-size: 20px;
+        }
+
+        .nav-btn,
+        .book-btn {
+            width: 100%;
+        }
+
+        .calendar {
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 4px;
+        }
+
+        .day-name {
+            display: block;
+            padding: 7px 2px;
+            border-radius: 8px;
+            font-size: 10px;
+            box-shadow: none;
+        }
+
+        .day {
+            min-height: 58px;
+            border-radius: 10px;
+            padding: 5px;
+            box-shadow: 0 5px 14px rgba(15,23,42,.06);
+        }
+
+        .day:hover {
+            transform: none;
+        }
+
+        .day-number {
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+
+        .day-status {
+            display: none;
+        }
+
+        .badge {
+            left: 4px;
+            bottom: 4px;
+            font-size: 9px;
+            padding: 2px 5px;
+        }
+
+        .modal {
+            align-items: flex-end;
+            padding: 10px;
+        }
+
+        .modal-content {
+            max-width: none;
+            border-radius: 24px 24px 18px 18px;
+            padding: 22px 18px;
+        }
+
+        .modal-content h2 {
+            font-size: 21px;
+        }
+    }
+
+    @media(max-width:420px) {
+        .container {
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+
+        .calendar {
+            gap: 3px;
+        }
+
+        .day-name {
+            font-size: 9px;
+            padding: 6px 1px;
+        }
+
+        .day {
+            min-height: 52px;
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .day-number {
+            font-size: 12px;
+        }
+
+        .badge {
+            font-size: 8px;
+            padding: 1px 4px;
+        }
+    }
+  </style>
 </head>
+<body><header><a href="https://aljawahirdev.github.io/home/" class="brand" aria-label="جمعية الجواهر بقمار"><img class="logo"
+         src="https://drive.google.com/thumbnail?id=1mN39uinRmOQGj04B5OfC9ZTPtlXyF1mb&sz=w1000"
+         alt="شعار جمعية الجواهر بقمار" /></a><h1>تقويم حجوزات سيارات الإسعاف</h1><p>اضغط على أي يوم لعرض تفاصيل الحجوزات - خدمة نقل طبي ونقل جثة</p>
+</header><div class="container"><div class="topbar"><div class="month-nav"><button class="nav-btn" onclick="changeMonth(-1)">السابق</button><h2 id="monthTitle"></h2><button class="nav-btn" onclick="changeMonth(1)">التالي</button></div><button class="book-btn" onclick="openBookingModal()">احجز الآن
+        </button></div><div class="calendar" id="calendar"></div></div><!-- نافذة الحجز -->
+<div class="modal" id="bookingModal"><div class="modal-content"><h2>حجز سيارة إسعاف</h2><p>سيتم تحويلك إلى صفحة الحجز الرسمية.<br>يمكنك اختيار خدمة النقل الطبي أو خدمة نقل الجثة.
+        </p><a href="https://aljawahirdev.github.io/Request_ambulance/" target="_blank">الانتقال إلى صفحة الحجز
+        </a><br><button class="close" onclick="closeBookingModal()">إغلاق</button></div>
+</div><!-- نافذة التفاصيل -->
+<div class="modal" id="detailsModal"><div class="modal-content"><h2 id="detailsTitle">تفاصيل اليوم</h2><div id="detailsContent"></div><button class="close" onclick="closeDetailsModal()">إغلاق</button></div>
+</div><script>
+// رابط Google Apps Script
+const GS_URL = "https://script.google.com/macros/s/AKfycbyt_EXTw1ENBWH5kgAYhxJg84AkXC6YwtUB4Wpzsr5Siwq2xF1Tmr4uQxuIb0OvCjql/exec";
 
-<body>
-
-<header>
-<a href="https://aljawahirdev.github.io/home/" class="brand" aria-label="جمعية الجواهر بقمار">
-  
-  <img class="logo"
-       src="https://drive.google.com/thumbnail?id=1mN39uinRmOQGj04B5OfC9ZTPtlXyF1mb&sz=w1000"
-       alt="شعار جمعية الجواهر بقمار" />
-
-  
-
-</a>
-    <h1>تقويم حجوزات سيارات الإسعاف</h1>
-    <p>اضغط على أي يوم لعرض تفاصيل الحجوزات في نافذة منبثقة</p>
-</header>
-
-<div class="container">
-
-    <div class="topbar">
-
-        <div class="month-nav">
-            <button class="nav-btn" onclick="changeMonth(-1)">السابق</button>
-            <h2 id="monthTitle"></h2>
-            <button class="nav-btn" onclick="changeMonth(1)">التالي</button>
-        </div>
-
-        <button class="book-btn" onclick="openBookingModal()">
-            احجز الآن
-        </button>
-
-    </div>
-
-    <div class="calendar" id="calendar"></div>
-
-</div>
-
-<div class="modal" id="bookingModal">
-    <div class="modal-content">
-        <h2>حجز سيارة إسعاف</h2>
-        <p>
-            سيتم تحويلك إلى صفحة الحجز الرسمية.
-        </p>
-
-        <a href="https://aljawahirdev.github.io/Request_ambulance/" target="_blank">
-            الانتقال إلى صفحة الحجز
-        </a>
-
-        <br>
-        <button class="close" onclick="closeBookingModal()">إغلاق</button>
-    </div>
-</div>
-
-<div class="modal" id="detailsModal">
-    <div class="modal-content">
-        <h2 id="detailsTitle">تفاصيل اليوم</h2>
-        <div id="detailsContent"></div>
-        <button class="close" onclick="closeDetailsModal()">إغلاق</button>
-    </div>
-</div>
-
-<script>
-
-const bookings = {
-    "2026-05-14": [{time:"08:00 - 10:00"}, {time:"14:00 - 15:00"}],
-    "2026-05-16": [{time:"09:00 - 12:00"}],
-    "2026-05-22": [{time:"17:00 - 18:00"}]
-};
-
-let current = new Date();
+let currentDate = new Date();
 
 const dayNames = ["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
 
-function renderCalendar() {
+let bookings = {};
 
+async function fetchBookings() {
+    try {
+        // جلب الحجوزات من النظام
+        const response = await fetch(GS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'getEquipmentReport', args: [null] })
+        });
+        const result = await response.json();
+        if (result.ok && result.data && result.data.activeLoans) {
+            const newBookings = {};
+            result.data.activeLoans.forEach(loan => {
+                const date = loan.loanDate;
+                if (!newBookings[date]) newBookings[date] = [];
+                newBookings[date].push({
+                    time: loan.loanDate,
+                    serviceType: loan.serviceType || 'medical',
+                    itemName: loan.itemName,
+                    patientName: loan.patientName,
+                    deceasedName: loan.deceasedName,
+                    borrower: loan.borrower,
+                    contact: loan.contact
+                });
+            });
+            bookings = newBookings;
+        }
+        renderCalendar();
+    } catch (err) {
+        console.error('خطأ في جلب الحجوزات:', err);
+        // بيانات تجريبية في حالة فشل الاتصال
+        bookings = {
+            "2026-05-14": [{time:"08:00 - 10:00", serviceType:"medical", itemName:"سيارة إسعاف 01", patientName:"أحمد محمد"}],
+            "2026-05-16": [{time:"09:00 - 12:00", serviceType:"burial", itemName:"سيارة نقل جثث", deceasedName:"علي أحمد"}],
+            "2026-05-22": [{time:"17:00 - 18:00", serviceType:"medical", itemName:"سيارة إسعاف 02", patientName:"فاطمة علي"}]
+        };
+        renderCalendar();
+    }
+}
+
+function renderCalendar() {
     const calendar = document.getElementById("calendar");
     calendar.innerHTML = "";
 
@@ -558,76 +567,86 @@ function renderCalendar() {
         calendar.appendChild(el);
     });
 
-    const year = current.getFullYear();
-    const month = current.getMonth();
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
 
     document.getElementById("monthTitle").textContent =
-        current.toLocaleDateString('ar-DZ', {
-            month:'long',
-            year:'numeric'
+        currentDate.toLocaleDateString('ar-DZ', {
+            month: 'long',
+            year: 'numeric'
         });
 
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    for(let i=0;i<firstDay;i++) {
+    for (let i = 0; i < firstDay; i++) {
         const empty = document.createElement("div");
         empty.className = "day empty";
         calendar.appendChild(empty);
     }
 
-    for(let day=1; day<=daysInMonth; day++) {
-
-        const dateKey = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const dayBookings = bookings[dateKey] || [];
 
         const cell = document.createElement("div");
         cell.className = "day";
+        if (dayBookings.length > 0) cell.classList.add("busy");
 
-        if(bookings[dateKey]) {
-            cell.classList.add("busy");
-        }
+        // حساب عدد الحجوزات حسب النوع
+        const medicalCount = dayBookings.filter(b => b.serviceType === 'medical').length;
+        const burialCount = dayBookings.filter(b => b.serviceType === 'burial').length;
+        
+        let badgeText = '';
+        if (medicalCount > 0) badgeText += `${medicalCount}  `;
+        if (burialCount > 0) badgeText += `${burialCount} ️`;
 
         cell.innerHTML = `
-            <div class="day-number">${day}</div>
-            <div class="day-status">${bookings[dateKey] ? 'يوجد انشغال' : 'متاح'}</div>
-            ${bookings[dateKey] ? `<div class="badge">${bookings[dateKey].length} حجوزات</div>` : ''}
+            <div class="day-number">${day}</div><div class="day-status">${dayBookings.length ? `${dayBookings.length} حجوزات` : 'متاح'}</div>${dayBookings.length ? `<div class="badge">${badgeText}</div>` : ''}
         `;
 
         cell.onclick = () => showDetails(dateKey);
-
         calendar.appendChild(cell);
     }
 }
 
 function showDetails(dateKey) {
-
     const list = bookings[dateKey] || [];
     const detailsTitle = document.getElementById("detailsTitle");
     const details = document.getElementById("detailsContent");
 
     detailsTitle.textContent = `تفاصيل يوم ${dateKey}`;
 
-    if(!list.length) {
-        details.innerHTML = `
-            <div class="no-booking">لا توجد حجوزات في هذا اليوم.</div>
-        `;
+    if (!list.length) {
+        details.innerHTML = `<div class="no-booking">لا توجد حجوزات في هذا اليوم.</div>`;
     } else {
-        details.innerHTML = `
-            ${list.map((b,i)=>`
-                <div class="booking-item">
-                    <strong>حجز #${i+1}</strong><br>
-                    وقت الانشغال: ${b.time}
-                </div>
-            `).join('')}
-        `;
+        details.innerHTML = list.map((b, i) => {
+            const serviceClass = b.serviceType === 'burial' ? 'burial' : '';
+            const serviceBadge = b.serviceType === 'burial' 
+                ? '<span class="service-badge burial">️ نقل جثة</span>' 
+                : '<span class="service-badge medical"> نقل طبي</span>';
+            
+            let detailsHtml = '';
+            if (b.serviceType === 'burial') {
+                detailsHtml = `
+                    <strong>${serviceBadge}</strong><br>${b.deceasedName ? 'المتوفى: ' + b.deceasedName + '<br>' : ''}
+                    سيارة الإسعاف: ${b.itemName}<br>مقدم الطلب: ${b.borrower || ''}<br>الهاتف: ${b.contact || ''}
+                `;
+            } else {
+                detailsHtml = `
+                    <strong>${serviceBadge}</strong><br>المريض: ${b.patientName || ''}<br>سيارة الإسعاف: ${b.itemName}<br>طالب الحجز: ${b.borrower || ''}<br>الهاتف: ${b.contact || ''}
+                `;
+            }
+            
+            return `<div class="booking-item ${serviceClass}">${detailsHtml}</div>`;
+        }).join('');
     }
-
     openDetailsModal();
 }
 
 function changeMonth(step) {
-    current.setMonth(current.getMonth() + step);
-    renderCalendar();
+    currentDate.setMonth(currentDate.getMonth() + step);
+    fetchBookings();
 }
 
 function openBookingModal() {
@@ -650,18 +669,12 @@ window.onclick = function(e) {
     const bookingModal = document.getElementById("bookingModal");
     const detailsModal = document.getElementById("detailsModal");
 
-    if(e.target === bookingModal) {
-        closeBookingModal();
-    }
-
-    if(e.target === detailsModal) {
-        closeDetailsModal();
-    }
+    if (e.target === bookingModal) closeBookingModal();
+    if (e.target === detailsModal) closeDetailsModal();
 }
 
-renderCalendar();
-
+// تحميل البيانات عند بدء التشغيل
+fetchBookings();
 </script>
-
 </body>
 </html>
