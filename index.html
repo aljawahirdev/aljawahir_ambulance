@@ -1,5 +1,8 @@
 
 
+
+
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head><link rel="icon" type="image/png" href="https://drive.google.com/thumbnail?id=1mN39uinRmOQGj04B5OfC9ZTPtlXyF1mb&sz=256"><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>تقويم حجوزات سيارات الإسعاف - جمعية الجواهر بقمار</title><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet"><style>* {
@@ -360,6 +363,50 @@
         font-weight: 700;
     }
 
+
+    .booking-row {
+        display: grid;
+        grid-template-columns: 120px 1fr;
+        gap: 8px;
+        align-items: start;
+        padding: 5px 0;
+        border-bottom: 1px dashed rgba(148,163,184,.45);
+        font-size: 14px;
+    }
+
+    .booking-row:last-child {
+        border-bottom: none;
+    }
+
+    .booking-label {
+        color: var(--muted);
+        font-weight: 800;
+    }
+
+    .booking-value {
+        color: var(--text);
+        font-weight: 700;
+        word-break: break-word;
+    }
+
+    .booking-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .source-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 800;
+        background: #e0f2fe;
+        color: #075985;
+    }
+
     @media(max-width:768px) {
         header {
             padding: 24px 14px;
@@ -511,7 +558,7 @@
 <div class="modal" id="detailsModal"><div class="modal-content"><h2 id="detailsTitle">تفاصيل اليوم</h2><div id="detailsContent"></div><button class="close" onclick="closeDetailsModal()">إغلاق</button></div>
 </div><script>
 // رابط Google Apps Script
-const GS_URL = "https://script.google.com/macros/s/AKfycbx9FRe5teF2ZT_0ckYdxwIdZJKvwfGlYPAsBl20piDCPeFdVSgghWBD2sXmqnKrOTCgPw/exec";
+const GS_URL = "https://script.google.com/macros/s/AKfycbyChA1X7vuov5osfeFeiko0n1Jn4IjW8ihR_CaHbrTYAXLHrp5DXQDBJI3GxL4js7UC/exec";
 
 let currentDate = new Date();
 
@@ -519,7 +566,7 @@ const dayNames = ["الأحد","الإثنين","الثلاثاء","الأربع
 
 let bookings = {};
 
-const BOOKINGS_CACHE_KEY = 'ambulance_bookings_cache_github_v1';
+const BOOKINGS_CACHE_KEY = 'ambulance_bookings_cache_github_v2';
 const API_TIMEOUT_MS = 45000;
 
 function gsApi(action, args) {
@@ -560,22 +607,140 @@ function gsApi(action, args) {
     });
 }
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function normalizeDateKey(value) {
+    if (!value) return '';
+    if (value instanceof Date && !isNaN(value)) {
+        return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
+    }
+    const s = String(value).trim();
+    const iso = s.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+    const fr = s.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/);
+    if (fr) return `${fr[3]}-${String(fr[2]).padStart(2, '0')}-${String(fr[1]).padStart(2, '0')}`;
+    return s.slice(0, 10);
+}
+
+function normalizeTime(value) {
+    if (!value) return '';
+    const s = String(value).trim();
+    const m = s.match(/([0-2]?\d):([0-5]\d)/);
+    if (!m) return '';
+    return `${String(m[1]).padStart(2, '0')}:${m[2]}`;
+}
+
+function getBookingDate(b) {
+    return normalizeDateKey(
+        b.deliveryDate || b.departureDate || b.date || b.loanDate || b.expectedReturnDate || b.createdAt
+    );
+}
+
+function getBookingStartTime(b) {
+    return normalizeTime(b.startTime || b.departureTime || b.time || '') || '00:00';
+}
+
+function getBookingEndTime(b) {
+    return normalizeTime(b.endTime || b.returnTime || '') || '23:59';
+}
+
+function isFinishedBooking(dateKey, endTime) {
+    const endDateTime = new Date(`${dateKey}T${endTime || '23:59'}:00`);
+    if (isNaN(endDateTime.getTime())) return false;
+    return new Date() > endDateTime;
+}
+
+function addBookingToCalendar(newBookings, booking) {
+    const dateKey = getBookingDate(booking);
+    if (!dateKey) return;
+
+    const startTime = getBookingStartTime(booking);
+    const endTime = getBookingEndTime(booking);
+
+    // إخفاء الحجز تلقائياً بعد نهاية الموعد
+    if (isFinishedBooking(dateKey, endTime)) return;
+
+    if (!newBookings[dateKey]) newBookings[dateKey] = [];
+    newBookings[dateKey].push({
+        orderNo: booking.orderNo || booking.id || booking.missionNo || booking.burialNo || booking.loanId || '',
+        bookingRef: booking.bookingRef || booking.requestNo || booking.sourceLoanId || booking.sourceRequestNo || booking.loanId || '',
+        vehicle: booking.vehicle || booking.itemName || booking.ambulanceName || booking.carName || '',
+        itemName: booking.itemName || booking.vehicle || booking.ambulanceName || '',
+        startTime,
+        endTime,
+        serviceType: booking.serviceType || 'medical',
+        sourceType: booking.sourceType || '',
+        patientName: booking.patientName || '',
+        deceasedName: booking.deceasedName || '',
+        borrower: booking.borrower || booking.applicantName || booking.createdBy || '',
+        contact: booking.contact || booking.applicantPhone || booking.companionPhone || '',
+        status: booking.status || ''
+    });
+}
+
 function buildBookingsFromReport(report) {
     const newBookings = {};
-    ((report && report.activeLoans) || []).forEach(loan => {
-        const date = loan.loanDate;
-        if (!date) return;
-        if (!newBookings[date]) newBookings[date] = [];
-        newBookings[date].push({
-            time: loan.loanDate,
-            serviceType: loan.serviceType || 'medical',
-            itemName: loan.itemName,
-            patientName: loan.patientName,
-            deceasedName: loan.deceasedName,
-            borrower: loan.borrower,
-            contact: loan.contact
+
+    // خارجي: طلبات الحجز من صفحة الزبون
+    ((report && report.requests) || []).forEach(req => {
+        addBookingToCalendar(newBookings, {
+            ...req,
+            orderNo: req.requestNo || req.id || '',
+            bookingRef: req.requestNo || '',
+            sourceType: 'حجز خارجي'
         });
     });
+
+    // داخلي: الحجوزات/الإعارات النشطة من لوحة الإدارة
+    ((report && report.activeLoans) || []).forEach(loan => {
+        addBookingToCalendar(newBookings, {
+            ...loan,
+            orderNo: loan.id || '',
+            bookingRef: loan.requestNo || loan.deliveryReceiptNo || '',
+            sourceType: 'تسخير داخلي'
+        });
+    });
+
+    // داخلي: تكاليف/تكليفات النقل الطبي
+    ((report && report.missions) || []).forEach(mission => {
+        addBookingToCalendar(newBookings, {
+            ...mission,
+            orderNo: mission.missionNo || '',
+            bookingRef: mission.sourceLoanId || '',
+            itemName: mission.itemName || '',
+            deliveryDate: mission.departureDate || mission.date,
+            startTime: mission.startTime || '',
+            endTime: mission.endTime || '',
+            sourceType: 'تكليف داخلي'
+        });
+    });
+
+    // داخلي: خدمات نقل الموتى المسجلة من لوحة الإدارة
+    ((report && report.burialServices) || []).forEach(burial => {
+        addBookingToCalendar(newBookings, {
+            ...burial,
+            orderNo: burial.burialNo || '',
+            bookingRef: burial.burialNo || '',
+            serviceType: 'burial',
+            itemName: burial.itemName || '',
+            deliveryDate: burial.burialDate || burial.date,
+            startTime: burial.startTime || '',
+            endTime: burial.endTime || '',
+            sourceType: 'تسخير داخلي'
+        });
+    });
+
+    Object.keys(newBookings).forEach(dateKey => {
+        newBookings[dateKey].sort((a, b) => String(a.startTime).localeCompare(String(b.startTime)));
+    });
+
     return newBookings;
 }
 
@@ -671,25 +836,25 @@ function showDetails(dateKey) {
     if (!list.length) {
         details.innerHTML = `<div class="no-booking">لا توجد حجوزات في هذا اليوم.</div>`;
     } else {
-        details.innerHTML = list.map((b, i) => {
+        details.innerHTML = list.map((b) => {
             const serviceClass = b.serviceType === 'burial' ? 'burial' : '';
-            const serviceBadge = b.serviceType === 'burial' 
-                ? '<span class="service-badge burial">️ نقل جثة</span>' 
-                : '<span class="service-badge medical"> نقل طبي</span>';
-            
-            let detailsHtml = '';
-            if (b.serviceType === 'burial') {
-                detailsHtml = `
-                    <strong>${serviceBadge}</strong><br>${b.deceasedName ? 'المتوفى: ' + b.deceasedName + '<br>' : ''}
-                    سيارة الإسعاف: ${b.itemName}<br>مقدم الطلب: ${b.borrower || ''}<br>الهاتف: ${b.contact || ''}
-                `;
-            } else {
-                detailsHtml = `
-                    <strong>${serviceBadge}</strong><br>المريض: ${b.patientName || ''}<br>سيارة الإسعاف: ${b.itemName}<br>طالب الحجز: ${b.borrower || ''}<br>الهاتف: ${b.contact || ''}
-                `;
-            }
-            
-            return `<div class="booking-item ${serviceClass}">${detailsHtml}</div>`;
+            const serviceBadge = b.serviceType === 'burial'
+                ? '<span class="service-badge burial">نقل جثة</span>'
+                : '<span class="service-badge medical">نقل طبي</span>';
+            const sourceBadge = b.sourceType ? `<span class="source-badge">${escapeHtml(b.sourceType)}</span>` : '';
+            const personLabel = b.serviceType === 'burial' ? 'اسم المتوفى' : 'اسم المريض';
+            const personName = b.serviceType === 'burial' ? b.deceasedName : b.patientName;
+
+            return `
+                <div class="booking-item ${serviceClass}">
+                    <div class="booking-meta">${serviceBadge}${sourceBadge}</div>
+                    <div class="booking-row"><span class="booking-label">رقم الطلب</span><span class="booking-value">${escapeHtml(b.orderNo || 'غير متوفر')}</span></div>
+                    <div class="booking-row"><span class="booking-label">مرجع الحجز</span><span class="booking-value">${escapeHtml(b.bookingRef || 'غير متوفر')}</span></div>
+                    <div class="booking-row"><span class="booking-label">السيارة</span><span class="booking-value">${escapeHtml(b.vehicle || b.itemName || 'غير محددة')}</span></div>
+                    <div class="booking-row"><span class="booking-label">موعد الحجز</span><span class="booking-value">من ${escapeHtml(b.startTime || '00:00')} إلى ${escapeHtml(b.endTime || '23:59')}</span></div>
+                    ${b.status ? `<div class="booking-row"><span class="booking-label">الحالة</span><span class="booking-value">${escapeHtml(b.status)}</span></div>` : ''}
+                </div>
+            `;
         }).join('');
     }
     openDetailsModal();
@@ -726,6 +891,9 @@ window.onclick = function(e) {
 
 // تحميل البيانات عند بدء التشغيل
 fetchBookings();
+
+// تحديث تلقائي لإخفاء الحجوزات المنتهية وإظهار الجديدة
+setInterval(fetchBookings, 60 * 1000);
 </script>
 </body>
 </html>
